@@ -15,7 +15,7 @@ func main() {
 
 	go broadcast.Start()
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe("10.0.1.25:8080", nil); err != nil {
 		log.Println("Error starting HTTP server", err)
 	}
 }
