@@ -88,7 +88,7 @@ func (pl *PlaylistGenerator) Start() {
 	pl.cursor = make(chan int, 1000)
 
 	go pl.KeepPlaylistUpdated()
-	for i := 1; i < 394; i++ {
+	for i := 1; i < 728; i++ {
 		log.Println(i)
 		pl.cursor <- i
 		time.Sleep(10 * time.Second)
