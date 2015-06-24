@@ -28,6 +28,11 @@ type PlaylistGenerator struct {
 }
 
 func (pl PlaylistGenerator) VideoFileForSequence(seq int) string {
+	generated := fmt.Sprintf("fileSequence%d.ts", seq)
+	return generated
+}
+
+func (pl PlaylistGenerator) GeneratedVideoFileForSequence(seq int) string {
 	prefix := ""
 	pref := client.Get("broadcast-prefix").Val()
 	prefix = pref
