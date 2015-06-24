@@ -91,7 +91,7 @@ func (pl *PlaylistGenerator) Start() {
 	for i := 1; i < 728; i++ {
 		log.Println(i)
 		pl.cursor <- i
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
