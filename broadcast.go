@@ -5,8 +5,9 @@ import (
 	"net/http"
 )
 
+var lfs = LogFileSystem{http.Dir("."), make(map[string]int)}
+
 func main() {
-	lfs := LogFileSystem{http.Dir(".")}
 	fsHandler := http.FileServer(lfs)
 	broadcast := PlaylistGenerator{}
 
@@ -15,7 +16,7 @@ func main() {
 
 	go broadcast.Start()
 
-	if err := http.ListenAndServe("10.0.1.25:8080", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Println("Error starting HTTP server", err)
 	}
 }
