@@ -77,7 +77,7 @@ func (pl *PlaylistGenerator) KeepPlaylistUpdated() {
 
 	for seqnum := 0; seqnum < 390; seqnum = <-pl.cursor {
 		videoFile := pl.VideoFileForSequence(seqnum)
-		if err := p.Append(videoFile, 10.0, ""); err != nil {
+		if err := p.Append(videoFile, 5.0, ""); err != nil {
 			log.Println("Error appending item to playlist:", err, fmt.Sprintf("fileSequence%d.ts", seqnum))
 		}
 		currentPlaylist = p.Encode().String()
