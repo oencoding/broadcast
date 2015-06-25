@@ -52,10 +52,16 @@ func (pl *PlaylistGenerator) Start() {
 }
 
 func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    var err error
 	channelId := strings.TrimSuffix(r.URL.Path, ".m3u8")
 	channel, ok := allChannels[channelId]
 	if !ok { // If this is the first time the channel is requested
-		channel = datastore.GetChannel(channelId)
+		channel, err = datastore.GetChannel(channelId)
+        if err != nil {
+            http.Error(w,"internal server error",500)
+            return
+        }
+        
 		go channel.AdvanceEvery(5 * time.Second)
 		allChannels[channelId] = &channel
 	}
