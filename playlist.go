@@ -1,9 +1,9 @@
 package main
 
 import (
+	"broadcast/datastore"
 	"fmt"
 	"github.com/grafov/m3u8"
-	"github.com/omarqazi/broadcast/datastore"
 	"log"
 	"net/http"
 	"strings"
@@ -52,19 +52,19 @@ func (pl *PlaylistGenerator) Start() {
 }
 
 func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    var err error
+	var err error
 	channelId := strings.TrimSuffix(r.URL.Path, ".m3u8")
 	channel, ok := allChannels[channelId]
 	if !ok { // If this is the first time the channel is requested
 		channel, err = datastore.GetChannel(channelId)
-        if err != nil {
-            http.Error(w,"internal server error",500)
-            return
-        }
-        
-		go channel.AdvanceEvery(5 * time.Second)
+		if err != nil {
+			http.Error(w, "internal server error", 500)
+			return
+		}
+
+		go channel.AdvanceEvery(5*time.Second, nil)
 		allChannels[channelId] = channel
 	}
-	channel := datastore.GetChannel(cha)
+
 	fmt.Fprintln(w, currentPlaylist)
 }
