@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-// function RenderTextToPNG uses freetype to render the text (first argument
+// function RenderTextToPNG uses freetype to render the text (first argument)
 // to a PNG file, using the TTF format font located at fontPath
 func RenderTextToPNG(text string, filename string, fontPath string) error {
 	fontBytes, err := ioutil.ReadFile(fontPath)
