@@ -1,6 +1,9 @@
 package datastore
 
 import (
+	"fmt"
+	"github.com/grafov/m3u8"
+	"log"
 	"strconv"
 	"time"
 )
@@ -9,6 +12,7 @@ import (
 type Channel struct {
 	Identifier      string // Identifier is the unique part of the redis key
 	PlaybackCounter int64
+	mediaPlaylist   *m3u8.MediaPlaylist
 }
 
 // function GetChannel retrieves Channel information from the datastore
@@ -17,11 +21,20 @@ func GetChannel(channelId string) (rv *Channel, err error) {
 	rv = &Channel{}
 	rv.Identifier = channelId
 	rv.PlaybackCounter, err = client.IncrBy(rv.PlaybackCounterKey(), 0).Result()
+	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(1000, 1000)
 	return
+}
+
+func (c *Channel) PlaylistData() string {
+	return c.mediaPlaylist.Encode().String()
 }
 
 // function AdvanceCounter advances the playback counter, and updates the datastore
 func (c *Channel) AdvanceCounter() error {
+	videoFile := fmt.Sprintf("http://www.smick.tv/media/truedetectives2e1movie%05d.ts", c.PlaybackCounter)
+	if err := c.mediaPlaylist.Append(videoFile, 5.0, ""); err != nil {
+		log.Println("Error appending item to playlist:", err)
+	}
 	c.PlaybackCounter = c.PlaybackCounter + 1
 	return c.SaveCounter()
 }
