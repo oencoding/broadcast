@@ -1,7 +1,7 @@
 package main
 
 import (
-	"broadcast/datastore"
+	"github.com/omarqazi/broadcast/datastore"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"log"
