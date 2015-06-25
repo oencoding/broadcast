@@ -1,4 +1,6 @@
-package main
+// package composite contains helpful functions for compositing information
+// onto video in real time
+package composite
 
 import (
 	"bufio"
@@ -10,8 +12,8 @@ import (
 	"os"
 )
 
-func RenderTextToPNG(text string, filename string) error {
-	fontBytes, err := ioutil.ReadFile("font.ttf")
+func RenderTextToPNG(text string, filename string, fontPath string) error {
+	fontBytes, err := ioutil.ReadFile(fontPath)
 	if err != nil {
 		return err
 	}
