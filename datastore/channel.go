@@ -35,6 +35,7 @@ func (c *Channel) ResetCounter() error {
 // the second argument should be a channel that will cancel the operation on receive
 func (c *Channel) AdvanceEvery(d time.Duration, cancel chan int) {
 	ticker := time.Tick(d)
+	c.AdvanceCounter()
 
 	for {
 		select {

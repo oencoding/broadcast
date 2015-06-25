@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"github.com/grafov/m3u8"
+	"github.com/omarqazi/broadcast/datastore"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
 var broadcastCursor = make(chan int)
 var currentPlaylist string
+var allChannels map[string]*datastore.Channel
 
 type PlaylistGenerator struct {
 	cursor chan int
@@ -49,5 +52,13 @@ func (pl *PlaylistGenerator) Start() {
 }
 
 func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	channelId := strings.TrimSuffix(r.URL.Path, ".m3u8")
+	channel, ok := allChannels[channelId]
+	if !ok { // If this is the first time the channel is requested
+		channel = datastore.GetChannel(channelId)
+		go channel.AdvanceEvery(5 * time.Second)
+		allChannels[channelId] = &channel
+	}
+	channel := datastore.GetChannel(cha)
 	fmt.Fprintln(w, currentPlaylist)
 }
