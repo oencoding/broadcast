@@ -6,7 +6,6 @@ import (
 	"gopkg.in/redis.v1"
 	"log"
 	"net/http"
-	"os/exec"
 	"time"
 )
 
