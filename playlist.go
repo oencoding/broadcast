@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broadcast/composite"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"gopkg.in/redis.v1"
@@ -53,7 +54,7 @@ func (pl PlaylistGenerator) GeneratedVideoFileForSequence(seq int) string {
 		}
 	}
 
-	err := RenderTextToPNG(currentTime, "time.png")
+	err := composite.RenderTextToPNG(currentTime, "time.png", "font.ttf")
 	if err == nil {
 		cmd := exec.Command("avconv", "-i", sourceVideo, "-vf", "movie=time.png [watermark];[in][watermark] overlay=0:0 [out]", "-y", "-map", "0", "-c:a", "copy", "-c:v", "mpeg2video", "-an", destVideo)
 		err := cmd.Start()
