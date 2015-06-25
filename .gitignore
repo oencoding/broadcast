@@ -1,0 +1,5 @@
+*.swp
+*.sqo
+db/data/*
+.DS_Store
+fileSequence*.ts
