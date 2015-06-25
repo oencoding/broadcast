@@ -14,6 +14,7 @@ type Channel struct {
 // function GetChannel retrieves Channel information from the datastore
 // given a channel identifier. It returns the channel and any error
 func GetChannel(channelId string) (rv *Channel, err error) {
+	rv = &Channel{}
 	rv.Identifier = channelId
 	rv.PlaybackCounter, err = client.IncrBy(rv.PlaybackCounterKey(), 0).Result()
 	return

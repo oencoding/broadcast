@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/omarqazi/broadcast/datastore"
 	"fmt"
 	"github.com/grafov/m3u8"
+	"github.com/omarqazi/broadcast/datastore"
 	"log"
 	"net/http"
 	"strings"
