@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/omarqazi/broadcast/composite"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"gopkg.in/redis.v1"
@@ -31,41 +30,6 @@ type PlaylistGenerator struct {
 func (pl PlaylistGenerator) VideoFileForSequence(seq int) string {
 	generated := fmt.Sprintf("http://www.smick.tv/media/truedetectives2e1movie%05d.ts", seq)
 	return generated
-}
-
-func (pl PlaylistGenerator) GeneratedVideoFileForSequence(seq int) string {
-	prefix := ""
-	pref := client.Get("broadcast-prefix").Val()
-	prefix = pref
-
-	generated := fmt.Sprintf("fileSequence%d.ts", seq)
-	postProcess := fmt.Sprintf("fileSequence%d-post.ts", seq)
-	sourceVideo := prefix + generated
-	destVideo := prefix + postProcess
-
-	currentTime := time.Now().Format("3:04 PM")
-
-	twoClipsAgo := seq - 2
-	if twoClipsAgo > 0 {
-		mapKey := fmt.Sprintf("/fileSequence%d-post.ts", twoClipsAgo)
-		log.Println("map key is", mapKey)
-		if count, ok := lfs.Counter[mapKey]; ok {
-			currentTime = fmt.Sprintf("%d active viewers", count)
-		}
-	}
-
-	err := composite.RenderTextToPNG(currentTime, "time.png", "font.ttf")
-	if err == nil {
-		cmd := exec.Command("avconv", "-i", sourceVideo, "-vf", "movie=time.png [watermark];[in][watermark] overlay=0:0 [out]", "-y", "-map", "0", "-c:a", "copy", "-c:v", "mpeg2video", "-an", destVideo)
-		err := cmd.Start()
-		if err != nil {
-			return sourceVideo
-		}
-		err = cmd.Wait()
-		return destVideo
-	}
-
-	return sourceVideo
 }
 
 func (pl *PlaylistGenerator) KeepPlaylistUpdated() {
