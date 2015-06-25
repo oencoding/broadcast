@@ -28,7 +28,7 @@ type PlaylistGenerator struct {
 }
 
 func (pl PlaylistGenerator) VideoFileForSequence(seq int) string {
-	generated := fmt.Sprintf("http://www.smick.tv/pulpfictionx/movie2m%05d.ts", seq)
+	generated := fmt.Sprintf("http://www.smick.tv/media/truedetectives2e1movie2m%05d.ts", seq)
 	return generated
 }
 
