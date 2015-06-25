@@ -6,7 +6,6 @@ import (
 )
 
 var lfs = LogFileSystem{http.Dir("."), make(map[string]int)}
-
 const channelRoute = "/channel/"
 
 func main() {
