@@ -1,7 +1,7 @@
 package main
 
 import (
-	"broadcast/composite"
+	"github.com/omarqazi/broadcast/composite"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"gopkg.in/redis.v1"
