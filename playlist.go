@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/grafov/m3u8"
-	"github.com/omarqazi/broadcast/configuration"
-	"gopkg.in/redis.v1"
 	"log"
 	"net/http"
 	"time"
@@ -12,15 +10,6 @@ import (
 
 var broadcastCursor = make(chan int)
 var currentPlaylist string
-var client *redis.Client
-
-func init() {
-	options := &redis.Options{Addr: configuration.RedisServerAddress()}
-	client = redis.NewTCPClient(options)
-	if _, err := client.Ping().Result(); err != nil {
-		log.Fatalln("Error connecting to redis:", err)
-	}
-}
 
 type PlaylistGenerator struct {
 	cursor chan int
