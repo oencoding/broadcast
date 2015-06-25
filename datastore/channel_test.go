@@ -21,6 +21,13 @@ func TestMoveCounter(t *testing.T) {
 		t.Fatal("Error getting channel:", err)
 	}
 
+	channel.PushItem(&PlaylistItem{
+		URLFormat: "test%d",
+		StartAt:   0,
+		EndAt:     1000,
+		Loop:      true,
+	})
+
 	initialValue := channel.PlaybackCounter
 	expectedValue := initialValue + 1
 	if err := channel.AdvanceCounter(); err != nil {
@@ -41,6 +48,13 @@ func TestAutoAdvance(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error getting channel:", err)
 	}
+
+	channel.PushItem(&PlaylistItem{
+		URLFormat: "test%d",
+		StartAt:   0,
+		EndAt:     1000,
+		Loop:      true,
+	})
 
 	originalValue := channel.PlaybackCounter
 	cancel := make(chan int, 1)
