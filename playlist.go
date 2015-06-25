@@ -63,7 +63,7 @@ func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
         
 		go channel.AdvanceEvery(5 * time.Second)
-		allChannels[channelId] = &channel
+		allChannels[channelId] = channel
 	}
 	channel := datastore.GetChannel(cha)
 	fmt.Fprintln(w, currentPlaylist)
