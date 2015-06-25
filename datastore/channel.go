@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"log"
@@ -29,13 +30,53 @@ func (c *Channel) PlaylistData() string {
 	return c.mediaPlaylist.Encode().String()
 }
 
+func (c Channel) CurrentItem() (PlaylistItem, error) {
+	jsonString, err := client.LIndex(c.PlaybackQueueKey(), 0).Result()
+	if err != nil {
+		return PlaylistItem{}, err
+	}
+
+	item := PlaylistItem{}
+	if err := json.Unmarshal([]byte(jsonString), &item); err != nil {
+		return PlaylistItem{}, err
+	}
+
+	return item, nil
+}
+
+func (c Channel) PushItem(i *PlaylistItem) error {
+	jsonBytes, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+
+	err = client.RPush(c.PlaybackQueueKey(), string(jsonBytes)).Err()
+	return err
+}
+
 // function AdvanceCounter advances the playback counter, and updates the datastore
 func (c *Channel) AdvanceCounter() error {
-	videoFile := fmt.Sprintf("http://www.smick.tv/media/truedetectives2e1movie%05d.ts", c.PlaybackCounter)
+	currentItem, err := c.CurrentItem()
+	if err != nil {
+		return err
+	}
+
+	if currentItem.StartAt > c.PlaybackCounter {
+		c.PlaybackCounter = currentItem.StartAt
+	}
+	videoFile := fmt.Sprintf(currentItem.URLFormat, c.PlaybackCounter)
 	if err := c.mediaPlaylist.Append(videoFile, 5.0, ""); err != nil {
 		log.Println("Error appending item to playlist:", err)
 	}
 	c.PlaybackCounter = c.PlaybackCounter + 1
+
+	if c.PlaybackCounter > currentItem.EndAt {
+		c.ResetCounter()
+		if !currentItem.Loop {
+			client.LPop(c.PlaybackQueueKey())
+		}
+	}
+
 	return c.SaveCounter()
 }
 
@@ -66,6 +107,11 @@ func (c *Channel) AdvanceEvery(d time.Duration, cancel chan int) {
 // function SaveCounter saves the current PlaybackCounter in the data store
 func (c Channel) SaveCounter() error {
 	return client.Set(c.PlaybackCounterKey(), strconv.FormatInt(c.PlaybackCounter, 10), 0).Err()
+}
+
+// function PlaybackQueueKey returns the data store key for the playback queue
+func (c Channel) PlaybackQueueKey() string {
+	return "broadcast-channel-" + c.Identifier + "-queue"
 }
 
 // function PlaybackCounterKey returns the data store key for the playback counter
