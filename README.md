@@ -1,4 +1,5 @@
 # Broadcast
+[![Build Status](https://travis-ci.org/omarqazi/broadcast.svg?branch=master)](https://travis-ci.org/omarqazi/broadcast)
 
 Broadcast is a simple HTTP live streaming server in Go. It serves media files off the local filesystem, and automatically generates playlists of media files to coordinate the live broadcast.
 
