@@ -7,11 +7,13 @@ import (
 	"code.google.com/p/freetype-go/freetype"
 	"image"
 	"image/draw"
-	"image/png"
+	//"image/png"
 	"io/ioutil"
 	"os"
 )
 
+// function RenderTextToPNG uses freetype to render the text (first argument)
+// to a PNG file, using the TTF format font located at fontPath
 func RenderTextToPNG(text string, filename string, fontPath string) error {
 	fontBytes, err := ioutil.ReadFile(fontPath)
 	if err != nil {
@@ -49,7 +51,7 @@ func RenderTextToPNG(text string, filename string, fontPath string) error {
 	defer f.Close()
 
 	b := bufio.NewWriter(f)
-	err = png.Encode(b, rgba)
+	//err = png.Encode(b, rgba)
 	if err != nil {
 		return err
 	}
