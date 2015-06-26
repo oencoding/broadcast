@@ -22,7 +22,7 @@ func GetChannel(channelId string) (rv *Channel, err error) {
 	rv = &Channel{}
 	rv.Identifier = channelId
 	rv.PlaybackCounter, err = client.IncrBy(rv.PlaybackCounterKey(), 0).Result()
-	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(1000, 1000)
+	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(50, 50)
 	return
 }
 
@@ -65,7 +65,12 @@ func (c *Channel) AdvanceCounter() error {
 		c.PlaybackCounter = currentItem.StartAt
 	}
 	videoFile := fmt.Sprintf(currentItem.URLFormat, c.PlaybackCounter)
-	if err := c.mediaPlaylist.Append(videoFile, 5.0, ""); err != nil {
+	if c.mediaPlaylist.Count() > 10 {
+		err = c.mediaPlaylist.Append(videoFile, 5.0, "")
+	} else {
+		err = c.mediaPlaylist.Slide(videoFile, 5.0, "")
+	}
+	if err != nil {
 		log.Println("Error appending item to playlist:", err)
 	}
 	c.PlaybackCounter = c.PlaybackCounter + 1
