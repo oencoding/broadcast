@@ -74,6 +74,9 @@ func (c *Channel) AdvanceCounter() error {
 	if c.PlaybackCounter > currentItem.EndAt {
 		c.ResetCounter()
 		if !currentItem.Loop {
+			if err := c.mediaPlaylist.SetDiscontinuity(); err != nil {
+				log.Println("Error setting discontinuity:", err)
+			}
 			client.LPop(c.PlaybackQueueKey())
 		}
 	}
