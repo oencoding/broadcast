@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/grafov/m3u8"
-	"log"
 	"strconv"
 	"time"
 )
@@ -22,7 +21,7 @@ func GetChannel(channelId string) (rv *Channel, err error) {
 	rv = &Channel{}
 	rv.Identifier = channelId
 	rv.PlaybackCounter, err = client.IncrBy(rv.PlaybackCounterKey(), 0).Result()
-	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(50, 50)
+	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(60, 60) // include five minutes of history
 	return
 }
 
@@ -64,15 +63,7 @@ func (c *Channel) AdvanceCounter() error {
 	if currentItem.StartAt > c.PlaybackCounter {
 		c.PlaybackCounter = currentItem.StartAt
 	}
-	videoFile := fmt.Sprintf(currentItem.URLFormat, c.PlaybackCounter)
-	if c.mediaPlaylist.Count() > 10 {
-		err = c.mediaPlaylist.Append(videoFile, 5.0, "")
-	} else {
-		err = c.mediaPlaylist.Slide(videoFile, 5.0, "")
-	}
-	if err != nil {
-		log.Println("Error appending item to playlist:", err)
-	}
+	c.mediaPlaylist.Slide(fmt.Sprintf(currentItem.URLFormat, c.PlaybackCounter), 5.0, "")
 	c.PlaybackCounter = c.PlaybackCounter + 1
 
 	if c.PlaybackCounter > currentItem.EndAt {
