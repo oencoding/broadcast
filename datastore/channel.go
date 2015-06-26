@@ -67,12 +67,16 @@ func (c *Channel) AdvanceCounter() error {
 	videoFile := fmt.Sprintf(currentItem.URLFormat, c.PlaybackCounter)
 	if err := c.mediaPlaylist.Append(videoFile, 5.0, ""); err != nil {
 		log.Println("Error appending item to playlist:", err)
+		c.mediaPlaylist.Slide(videoFile, 5.0, "")
 	}
 	c.PlaybackCounter = c.PlaybackCounter + 1
 
 	if c.PlaybackCounter > currentItem.EndAt {
 		c.ResetCounter()
 		if !currentItem.Loop {
+			if err := c.mediaPlaylist.SetDiscontinuity(); err != nil {
+				log.Println("Error setting discontinuity:", err)
+			}
 			client.LPop(c.PlaybackQueueKey())
 		}
 	}
