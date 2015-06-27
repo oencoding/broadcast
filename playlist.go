@@ -14,7 +14,7 @@ type PlaylistGenerator struct {
 }
 
 func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	checkCORSHeader(w, r)
+	w.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	var err error
 	channelId := strings.TrimSuffix(r.URL.Path, ".m3u8")
 	channel, ok := allChannels[channelId]
@@ -30,12 +30,4 @@ func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, channel.PlaylistData())
-}
-
-func checkCORSHeader(w http.ResponseWriter, r *http.Request) {
-	origin := r.Header.Get("Origin")
-	if err != nil {
-		http.Error(w, "Invalid origin header", 400)
-	}
-	w.Header().Add("Access-Control-Allow-Origin", origin)
 }
