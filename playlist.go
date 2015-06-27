@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/omarqazi/broadcast/datastore"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -35,7 +34,6 @@ func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func checkCORSHeader(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
-	url, err := url.Parse(origin)
 	if err != nil {
 		http.Error(w, "Invalid origin header", 400)
 	}
