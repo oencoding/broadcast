@@ -39,6 +39,5 @@ func checkCORSHeader(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Invalid origin header", 400)
 	}
-	host := url.Host
-	w.Header().Add("Access-Control-Allow-Origin", host)
+	w.Header().Add("Access-Control-Allow-Origin", origin)
 }
