@@ -7,7 +7,8 @@ import (
 
 const channelRoute = "/channel/"
 
-var lfs = LogFileSystem{http.Dir("."), make(map[string]int)}
+// var lfs = LogFileSystem{http.Dir("."), make(map[string]int)} // uncomment for debug fs
+var lfs = http.Dir(".")
 
 // when the program starts:
 // 1. Setup up routes to:
