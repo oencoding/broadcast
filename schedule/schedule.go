@@ -9,25 +9,21 @@ import (
 
 func main() {
 	channel, _ := datastore.GetChannel("live")
-	prydz := media.SavedTrack{
-		Id:             "prydz",
-		URLFormat:      "http://www.smick.tv/media/prydz/fileSequence%d.ts",
+	prydz := &media.SavedTrack{
+		Id:             "phil",
+		URLFormat:      "http://www.smick.tv/media/philshow/fileSequence%d.ts",
 		StartAt:        0,
-		EndAt:          157,
-		Loop:           true,
+		EndAt:          14,
 		TargetDuration: 5.0,
 	}
 
-	if err := channel.PushItem(prydz); err != nil {
-		log.Println("Error:", err)
+	datastore.SaveVideoTrack(prydz)
+	pl := datastore.PlaylistItem{
+		TrackId: "phil",
+		Loop:    true,
 	}
-}
 
-func mediaItem(folder string, start int64, end int64) *datastore.PlaylistItem {
-	return &datastore.PlaylistItem{
-		URLFormat: "http://www.smick.tv/media/" + folder + "/fileSequence%d.ts",
-		StartAt:   start,
-		EndAt:     end,
-		Loop:      false,
+	if err := channel.PushItem(pl); err != nil {
+		log.Println("Error:", err)
 	}
 }

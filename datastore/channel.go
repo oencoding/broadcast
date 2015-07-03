@@ -31,38 +31,29 @@ func (c *Channel) PlaylistData() string {
 }
 
 // function CurrentItem() returns the currently playing VideoTrack
-func (c Channel) CurrentItem() (media.VideoTrack, error) {
-	trackId, err := client.LIndex(c.PlaybackQueueKey(), 0).Result()
+func (c Channel) CurrentItem() (media.VideoTrack, error, *PlaylistItem) {
+	trackItem, err := client.LIndex(c.PlaybackQueueKey(), 0).Result()
 	if err != nil {
-		return media.BlankTrack(""), err
+		return media.BlankTrack(""), err, nil
 	}
 
-	trackType, err := client.Get(trackId + "-class").Result()
-	if err != nil {
-		trackType = "saved"
+	pi := PlaylistItem{}
+	if err := json.Unmarshal([]byte(trackItem), &pi); err != nil {
+		return media.BlankTrack(""), err, &pi
 	}
 
-	item := media.BlankTrack(trackType)
-	trackData, err := client.Get("track-" + trackId + "-data").Result()
-	if err != nil {
-		return media.BlankTrack(""), err
-	}
+	item := pi.VideoTrack()
 
-	if err := item.Load(trackData); err != nil {
-		return media.BlankTrack(""), err
-	}
-
-	return item, nil
+	return item, nil, &pi
 }
 
 // Function PushItem serializes a VideoTrack to storage, and queues
 // it for playback at the end of the track queue
-func (c Channel) PushItem(i media.VideoTrack) (err error) {
-	trackId := i.Identifier()
-	client.Set(trackId+"-class", i.Class(), 0)
+func (c Channel) PushItem(i PlaylistItem) (err error) {
 	if jsonBytes, err := json.Marshal(i); err == nil {
-		client.Set("track-"+trackId+"-data", string(jsonBytes), 0)
-		err = client.RPush(c.PlaybackQueueKey(), i.Identifier()).Err()
+		err = client.RPush(c.PlaybackQueueKey(), string(jsonBytes)).Err()
+	} else {
+		log.Println(err)
 	}
 
 	return err
@@ -71,8 +62,11 @@ func (c Channel) PushItem(i media.VideoTrack) (err error) {
 // Function Play starts the broadcast timer
 func (c *Channel) Play() {
 	for {
-		if currentItem, err := c.CurrentItem(); err == nil {
+		if currentItem, err, pi := c.CurrentItem(); err == nil {
 			c.PlayTrack(currentItem)
+			if !pi.Loop { // unless we're supposed to loop
+				client.LPop(c.PlaybackQueueKey()) // move to next track
+			}
 		} else {
 			time.Sleep(1 * time.Second)
 			continue
@@ -98,6 +92,7 @@ func (c *Channel) PlayTrack(currentItem media.VideoTrack) error {
 		c.SetPlaybackCounter(npc)
 
 		if currentItem.IsDone() {
+			c.SetPlaybackCounter(0)
 			return nil
 		}
 	}

@@ -59,7 +59,7 @@ func (st SavedTrack) IsReady() bool {
 }
 
 func (st *SavedTrack) IsDone() bool {
-	return st.PlaybackCounter >= st.EndAt
+	return st.PlaybackCounter > st.EndAt
 }
 
 func (st SavedTrack) Serialize() (string, error) {
@@ -85,8 +85,9 @@ func (rv *SavedTrack) Load(json string) error {
 
 func (st SavedTrack) SegmentNumber(seg int64) Segment {
 	return Segment{
-		URL:      fmt.Sprintf(st.URLFormat, seg),
-		Duration: st.TargetDuration,
-		Title:    "",
+		URL:           fmt.Sprintf(st.URLFormat, seg),
+		Duration:      st.TargetDuration,
+		Title:         "",
+		Discontinuity: (seg == st.StartAt),
 	}
 }
