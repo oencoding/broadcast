@@ -2,7 +2,6 @@ package datastore
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/grafov/m3u8"
 	"github.com/omarqazi/broadcast/media"
 	"log"
@@ -21,14 +20,17 @@ type Channel struct {
 func GetChannel(channelId string) (rv *Channel, err error) {
 	rv = &Channel{}
 	rv.Identifier = channelId
-	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(1000, 1000)
+	rv.mediaPlaylist, _ = m3u8.NewMediaPlaylist(100, 100)
 	return
 }
 
+// function PlaylistData() returns the current channel data in m3u8
+// HTTP live streaming playlist format
 func (c *Channel) PlaylistData() string {
 	return c.mediaPlaylist.Encode().String()
 }
 
+// function CurrentItem() returns the currently playing VideoTrack
 func (c Channel) CurrentItem() (media.VideoTrack, error) {
 	trackId, err := client.LIndex(c.PlaybackQueueKey(), 0).Result()
 	if err != nil {
@@ -37,7 +39,7 @@ func (c Channel) CurrentItem() (media.VideoTrack, error) {
 
 	trackType, err := client.Get(trackId + "-class").Result()
 	if err != nil {
-		return media.BlankTrack(""), err
+		trackType = "saved"
 	}
 
 	item := media.BlankTrack(trackType)
@@ -46,60 +48,95 @@ func (c Channel) CurrentItem() (media.VideoTrack, error) {
 		return media.BlankTrack(""), err
 	}
 
-	if err := json.Unmarshal([]byte(trackData), &item); err != nil {
+	if err := item.Load(trackData); err != nil {
 		return media.BlankTrack(""), err
 	}
 
 	return item, nil
 }
 
-func (c Channel) PushItem(i VideoTrack) (err error) {
+// Function PushItem serializes a VideoTrack to storage, and queues
+// it for playback at the end of the track queue
+func (c Channel) PushItem(i media.VideoTrack) (err error) {
 	trackId := i.Identifier()
-	client.Set(trackId+"-class", i.Class())
-	if jsonBytes, err := json.Marshal(i); err != nil {
-		return err
+	client.Set(trackId+"-class", i.Class(), 0)
+	if jsonBytes, err := json.Marshal(i); err == nil {
+		client.Set("track-"+trackId+"-data", string(jsonBytes), 0)
+		err = client.RPush(c.PlaybackQueueKey(), i.Identifier()).Err()
 	}
-	client.Set("track-"+trackId+"-data", string(jsonBytes))
-	err = client.RPush(c.PlaybackQueueKey(), i.Identifier()).Err()
+
 	return err
 }
 
-func (c *Channel) Play() error {
+// Function Play starts the broadcast timer
+func (c *Channel) Play() {
 	for {
-		currentItem, err := c.CurrentItem()
-		if err != nil {
+		if currentItem, err := c.CurrentItem(); err == nil {
+			c.PlayTrack(currentItem)
+		} else {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		playback := currentItem.Play()
-		timeout := time.Tick(10 * time.Second)
+	}
+}
 
+// Function PlayTrack broadcasta a track on the channel until the
+// track is finished
+func (c *Channel) PlayTrack(currentItem media.VideoTrack) error {
+	npc := int64(0)
+	playback := currentItem.PlayFrom(c.GetPlaybackCounter())
+
+	for {
+		timeout := time.Tick(10 * time.Second)
 		select {
-		case <-playback:
-			segment := currentItem.CurrentSegment()
-			params := segment.Params()
-			if err := c.mediaPlaylist.Append(params...); err != nil {
-				c.mediaPlaylist.Slide(params...)
-			}
-			if segment.Discontinuity {
-				if err := c.mediaPlaylist.SetDiscontinuity(); err != nil {
-					log.Println("Error setting discontinuity:", err)
-				}
-			}
+		case npc = <-playback:
+			c.BroadcastSegment(currentItem, npc, true)
 		case <-timeout:
-			segment := currentItem.CurrentSegment()
-			params := segment.Params()
-			if err := c.mediaPlaylist.Append(params...); err != nil {
-				c.mediaPlaylist.Slide(params...)
-			}
+			c.BroadcastSegment(currentItem, npc, false)
+		}
+
+		c.SetPlaybackCounter(npc)
+
+		if currentItem.IsDone() {
+			return nil
 		}
 	}
+
 	return nil
 }
 
-// function SaveCounter saves the current PlaybackCounter in the data store
-func (c Channel) SaveCounter() error {
-	return client.Set(c.PlaybackCounterKey(), strconv.FormatInt(c.PlaybackCounter, 10), 0).Err()
+// function BroadcastSegment broadcasts a single segment on the channel
+func (c *Channel) BroadcastSegment(v media.VideoTrack, pc int64, breaks bool) {
+	segment := v.SegmentNumber(pc)
+	err := c.mediaPlaylist.Append(segment.URL, segment.Duration, segment.Title)
+	if err != nil {
+		c.mediaPlaylist.Slide(segment.URL, segment.Duration, segment.Title)
+	}
+
+	if breaks && segment.Discontinuity {
+		if err := c.mediaPlaylist.SetDiscontinuity(); err != nil {
+			log.Println("Error setting discontinuity:", err)
+		}
+	}
+}
+
+func (c Channel) GetPlaybackCounter() int64 {
+	cnt, err := client.Get(c.PlaybackCounterKey()).Result()
+	if err != nil {
+		return 0
+	} else {
+		rv, err := strconv.ParseInt(cnt, 10, 64)
+		if err != nil {
+			return 0
+		} else {
+			return rv
+		}
+	}
+}
+
+func (c Channel) SetPlaybackCounter(npc int64) error {
+	err := client.Set(c.PlaybackCounterKey(), strconv.FormatInt(npc, 10), 0).Err()
+	return err
 }
 
 // function PlaybackQueueKey returns the data store key for the playback queue

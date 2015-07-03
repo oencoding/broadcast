@@ -1,50 +1,25 @@
 // until i have a better UI built, schedule helps schedule programming into redis
 package main
 
-import "github.com/omarqazi/broadcast/datastore"
+import (
+	"github.com/omarqazi/broadcast/datastore"
+	"github.com/omarqazi/broadcast/media"
+	"log"
+)
 
 func main() {
 	channel, _ := datastore.GetChannel("live")
-	phil := &datastore.PlaylistItem{
-		URLFormat: "http://www.smick.tv/media/away/fileSequence%d.ts",
-		StartAt:   0,
-		EndAt:     53,
-		Loop:      true,
+	prydz := media.SavedTrack{
+		Id:             "prydz",
+		URLFormat:      "http://www.smick.tv/media/prydz/fileSequence%d.ts",
+		StartAt:        0,
+		EndAt:          157,
+		Loop:           true,
+		TargetDuration: 5.0,
 	}
 
-	channel.PushItem(phil)
-}
-
-func xmain() {
-	channel, _ := datastore.GetChannel("live")
-	ad := &datastore.PlaylistItem{
-		URLFormat: "http://www.smick.tv/media/smick/fileSequence%d.ts",
-		StartAt:   0,
-		EndAt:     36,
-		Loop:      false,
-	}
-
-	episodeBreaks := map[string][]int64{
-		"dexters1e2":  []int64{87, 170, 258},
-		"dexters1e7":  []int64{88, 172, 259},
-		"dexters1e10": []int64{87, 170, 258},
-	}
-
-	scheduleEpisode := func(episodeName string) {
-		breaks := episodeBreaks[episodeName]
-		lastend := int64(0)
-		for i := range breaks {
-			endAt := breaks[i] - 1
-			channel.PushItem(mediaItem(episodeName, lastend, endAt))
-			lastend = breaks[i]
-			channel.PushItem(ad)
-		}
-	}
-
-	for j := 0; j < 100; j++ {
-		for k, _ := range episodeBreaks {
-			scheduleEpisode(k)
-		}
+	if err := channel.PushItem(prydz); err != nil {
+		log.Println("Error:", err)
 	}
 }
 

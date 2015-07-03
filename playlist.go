@@ -5,7 +5,6 @@ import (
 	"github.com/omarqazi/broadcast/datastore"
 	"net/http"
 	"strings"
-	"time"
 )
 
 var allChannels map[string]*datastore.Channel = make(map[string]*datastore.Channel)
@@ -25,7 +24,7 @@ func (pl PlaylistGenerator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		go channel.AdvanceEvery(5*time.Second, nil)
+		go channel.Play()
 		allChannels[channelId] = channel
 	}
 
