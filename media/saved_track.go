@@ -21,8 +21,13 @@ type SavedTrack struct {
 }
 
 func (st *SavedTrack) PlayFrom(npc int64) chan int64 {
+	pc := npc
+	if st.StartAt > pc {
+		pc = st.StartAt
+	}
+
 	if st.tickChannel == nil {
-		st.PlaybackCounter = npc
+		st.PlaybackCounter = pc
 		st.tickChannel = make(chan int64, 10)
 		go st.AdvanceEvery(time.Duration(st.TargetDuration * float64(time.Second)))
 	}

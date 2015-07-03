@@ -8,7 +8,7 @@ import (
 )
 
 func GetVideoTrack(trackId string) media.VideoTrack {
-	trackType, err := client.Get(trackId).Result()
+	trackType, err := client.Get(trackId + "-class").Result()
 	if err != nil {
 		trackType = "saved"
 	}

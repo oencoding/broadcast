@@ -24,6 +24,8 @@ func BlankTrack(trackClass string) VideoTrack {
 	switch trackClass {
 	case "saved":
 		return &SavedTrack{}
+	case "hls":
+		return &HLSTrack{}
 	default:
 		return &SavedTrack{}
 	}

@@ -68,6 +68,7 @@ func (c *Channel) Play() {
 				client.LPop(c.PlaybackQueueKey()) // move to next track
 			}
 		} else {
+			log.Println("Error playing track:", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}

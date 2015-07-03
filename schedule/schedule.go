@@ -9,18 +9,16 @@ import (
 
 func main() {
 	channel, _ := datastore.GetChannel("live")
-	prydz := &media.SavedTrack{
-		Id:             "phil",
-		URLFormat:      "http://www.smick.tv/media/philshow/fileSequence%d.ts",
-		StartAt:        0,
-		EndAt:          14,
-		TargetDuration: 5.0,
+	smicktv := &media.HLSTrack{
+		Id:              "meerkat",
+		PlaylistURL:     "http://cdn.meerkatapp.co/broadcast/c42beb6b-4a19-4227-8cbd-303a0e796d28/live.m3u8",
+		PlaybackCounter: 0,
 	}
 
-	datastore.SaveVideoTrack(prydz)
+	datastore.SaveVideoTrack(smicktv)
 	pl := datastore.PlaylistItem{
-		TrackId: "phil",
-		Loop:    true,
+		TrackId: "meerkat",
+		Loop:    false,
 	}
 
 	if err := channel.PushItem(pl); err != nil {
